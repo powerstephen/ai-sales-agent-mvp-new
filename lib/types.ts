@@ -33,17 +33,31 @@ export type Lead = {
 };
 
 export type ICPFit = "High" | "Medium" | "Low";
-export type Persona = "Sales Leader" | "RevOps" | "Founder" | "Marketing Leader" | "Other";
-export type LeadState = "Dormant" | "Warm but Neglected" | "At Risk" | "Active";
+export type Persona =
+  | "Sales Leader"
+  | "RevOps"
+  | "Founder"
+  | "Marketing Leader"
+  | "Other";
+export type LeadState =
+  | "Dormant"
+  | "Warm but Neglected"
+  | "At Risk"
+  | "Active";
 
 export type LeadAnalysis = {
   icpFit: ICPFit;
   persona: Persona;
   state: LeadState;
   priority: "High" | "Medium" | "Low";
+  score: number;
   reasoning: string;
   whyNow: string[];
   angle: string;
-  suggestedAction: "Re-engage now" | "Push to nurture" | "Assign to SDR" | "Low priority";
+  suggestedAction:
+    | "Re-engage now"
+    | "Push to nurture"
+    | "Assign to SDR"
+    | "Low priority";
   email: string;
 };
