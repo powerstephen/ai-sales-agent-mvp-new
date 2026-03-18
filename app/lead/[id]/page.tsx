@@ -19,7 +19,9 @@ function getPriorityLabel(score: number) {
 export default async function LeadPage({ params }: { params: { id: string } }) {
   const lead = getLeadById(params.id);
 
-  if (!lead) return notFound();
+  if (!lead) {
+    notFound();
+  }
 
   const analysis = await analyzeLead(lead);
   const signals = getSignalCards(lead);
@@ -27,8 +29,6 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
       <div className="mx-auto max-w-6xl">
-
-        {/* HEADER */}
         <div className="mb-8">
           <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
             ← Back
@@ -42,29 +42,25 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </p>
         </div>
 
-        {/* HERO */}
         <div className="mb-8 rounded-3xl border bg-white p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
-
-            {/* SCORE */}
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm text-gray-500">Lead Score</p>
-              <div className="flex items-end gap-4 mt-2">
-                <div className={`text-7xl font-bold ${getScoreColor(analysis.score)}`}>
+              <p className="text-sm font-medium text-gray-500">Lead Score</p>
+              <div className="mt-2 flex items-end gap-4">
+                <div className={`text-7xl font-bold leading-none ${getScoreColor(analysis.score)}`}>
                   {analysis.score}
                 </div>
-                <div className="text-lg text-gray-600 pb-2">
+                <div className="pb-2 text-lg font-medium text-gray-600">
                   {getPriorityLabel(analysis.score)}
                 </div>
               </div>
             </div>
 
-            {/* TAGS */}
             <div className="flex flex-wrap gap-2">
-              {analysis.whyNow.slice(0, 4).map((item, i) => (
+              {analysis.whyNow.slice(0, 4).map((item, index) => (
                 <span
-                  key={i}
-                  className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full"
+                  key={index}
+                  className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800"
                 >
                   {item}
                 </span>
@@ -73,43 +69,37 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* SIGNAL GRID */}
-        <div className="mb-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {signals.map((s, i) => (
+        <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {signals.map((signal, index) => (
             <div
-              key={i}
+              key={index}
               className={`rounded-xl border p-4 text-sm font-medium ${
-                s.active
-                  ? "bg-green-50 text-green-800 border-green-200"
-                  : "bg-gray-50 text-gray-400 border-gray-200"
+                signal.active
+                  ? "border-green-200 bg-green-50 text-green-800"
+                  : "border-gray-200 bg-gray-50 text-gray-400"
               }`}
             >
-              {s.label}
+              {signal.label}
             </div>
           ))}
         </div>
 
-        {/* MAIN GRID */}
-        <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8">
-
-          {/* LEFT SIDE */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-6">
-
-            {/* WHY THIS LEAD */}
-            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+            <div className="rounded-2xl border bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-gray-900">
                 Why this lead now
               </h2>
 
-              <p className="mt-3 text-sm text-gray-700 leading-6">
+              <p className="mt-3 text-sm leading-6 text-gray-700">
                 {analysis.reasoning}
               </p>
 
               <ul className="mt-4 space-y-2">
-                {analysis.whyNow.slice(0, 4).map((item, i) => (
+                {analysis.whyNow.slice(0, 4).map((item, index) => (
                   <li
-                    key={i}
-                    className="text-sm bg-gray-50 px-3 py-2 rounded-lg"
+                    key={index}
+                    className="rounded-lg bg-gray-50 px-3 py-2 text-sm"
                   >
                     {item}
                   </li>
@@ -117,63 +107,86 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
               </ul>
             </div>
 
-            {/* TIMELINE */}
-            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+            <div className="rounded-2xl border bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-gray-900">
                 Activity
               </h2>
 
               <div className="mt-4 space-y-3">
-                {lead.activities.map((a, i) => (
-                  <div key={i} className="bg-gray-50 p-3 rounded-lg text-sm">
+                {lead.activities.map((activity, index) => (
+                  <div key={index} className="rounded-lg bg-gray-50 p-3 text-sm">
                     <div className="flex justify-between">
                       <span className="capitalize text-gray-900">
-                        {a.type.replace(/_/g, " ")}
+                        {activity.type.replace(/_/g, " ")}
                       </span>
-                      <span className="text-gray-500">{a.daysAgo}d ago</span>
+                      <span className="text-gray-500">{activity.daysAgo}d ago</span>
                     </div>
-                    <p className="mt-1 text-gray-700">{a.note}</p>
+                    <p className="mt-1 text-gray-700">{activity.note}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE — EMAIL */}
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-
+          <div className="rounded-2xl border bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900">
-              Suggested outreach
+              Outreach sequence
             </h2>
 
-            {/* EMAIL PREVIEW */}
-            <div className="mt-4 border rounded-xl p-4 bg-gray-50">
+            <div className="mt-4 flex gap-2">
+              {["3 days", "5 days", "7 days"].map((delay) => (
+                <button
+                  key={delay}
+                  className="rounded-full border px-3 py-1 text-xs hover:bg-gray-100"
+                >
+                  {delay}
+                </button>
+              ))}
+            </div>
 
-              <div className="text-xs text-gray-500 mb-2">
-                From: Stephen  
-                <br />
-                To: {lead.email}
-              </div>
+            <div className="mt-6 rounded-xl border bg-gray-50 p-4">
+              <p className="mb-2 text-xs text-gray-500">Email 1 (Now)</p>
 
-              <div className="bg-white border rounded-lg p-4 text-sm leading-6 text-gray-800 max-w-full">
-                <pre className="whitespace-pre-wrap">
-{analysis.email}
-                </pre>
+              <div className="rounded-lg border bg-white p-4 text-sm leading-6 text-gray-800">
+                <div className="mb-3 text-xs text-gray-500">
+                  From: Stephen
+                  <br />
+                  To: {lead.email}
+                </div>
+
+                <pre className="whitespace-pre-wrap">{analysis.email}</pre>
               </div>
             </div>
 
-            {/* ACTIONS */}
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button className="bg-black text-white px-4 py-2 rounded-lg text-sm">
-                Send now
+            <div className="mt-3 text-center text-xs text-gray-400">
+              ↓ Follow-up
+            </div>
+
+            <div className="mt-3 rounded-xl border bg-gray-50 p-4">
+              <p className="mb-2 text-xs text-gray-500">Email 2</p>
+
+              <div className="rounded-lg border bg-white p-4 text-sm leading-6 text-gray-800">
+                <div className="mb-3 text-xs text-gray-500">
+                  From: Stephen
+                  <br />
+                  To: {lead.email}
+                </div>
+
+                <pre className="whitespace-pre-wrap">{analysis.followUpEmail}</pre>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button className="rounded-lg bg-black px-4 py-2 text-sm text-white">
+                Launch sequence
               </button>
-              <button className="border px-4 py-2 rounded-lg text-sm">
-                Send + follow-up
+              <button className="rounded-lg border px-4 py-2 text-sm">
+                Edit emails
               </button>
             </div>
 
-            <p className="text-xs text-gray-500 mt-3">
-              Follow-up timing (3, 5, 7 days) can be configurable.
+            <p className="mt-3 text-xs text-gray-500">
+              Sequence timing can later be made configurable per user.
             </p>
           </div>
         </div>
