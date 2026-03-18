@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { leads } from "@/lib/data";
-import { getICPFit, getLeadState, getPersona, getPriority } from "@/lib/scoring";
+import { getICPFit, getLeadScore, getLeadState, getPersona, getPriority } from "@/lib/scoring";
+
+function getScoreStyles(score: number) {
+  if (score >= 80) return "bg-green-100 text-green-700 border-green-200";
+  if (score >= 60) return "bg-amber-100 text-amber-700 border-amber-200";
+  return "bg-gray-100 text-gray-700 border-gray-200";
+}
 
 export default function HomePage() {
-  const enrichedLeads = leads.map((lead) => ({
-    ...lead,
-    icpFit: getICPFit(lead),
-    persona: getPersona(lead.title),
-    state: getLeadState(lead),
-    priority: getPriority(lead),
-  }));
+  const enrichedLeads = leads
+    .map((lead) => ({
+      ...lead,
+      icpFit: getICPFit(lead),
+      persona: getPersona(lead.title),
+      state: getLeadState(lead),
+      priority: getPriority(lead),
+      score: getLeadScore(lead),
+    }))
+    .sort((a, b) => b.score - a.score);
 
   const highPriority = enrichedLeads.filter((lead) => lead.priority === "High").length;
   const dormant = enrichedLeads.filter((lead) => lead.state === "Dormant").length;
@@ -25,7 +34,7 @@ export default function HomePage() {
             Dormant pipeline recovery dashboard
           </h1>
           <p className="mt-3 max-w-3xl text-base text-gray-600">
-            Identify high-fit neglected leads, understand why they matter now, and generate a more relevant next step based on persona, timing, and CRM context.
+            Rank neglected leads, understand why they matter now, and generate the next best action based on fit, timing, engagement and pain signals.
           </p>
         </div>
 
@@ -59,6 +68,7 @@ export default function HomePage() {
                 <tr className="text-left text-sm text-gray-500">
                   <th className="px-6 py-4 font-medium">Lead</th>
                   <th className="px-6 py-4 font-medium">Company</th>
+                  <th className="px-6 py-4 font-medium">Score</th>
                   <th className="px-6 py-4 font-medium">Persona</th>
                   <th className="px-6 py-4 font-medium">ICP fit</th>
                   <th className="px-6 py-4 font-medium">State</th>
@@ -77,6 +87,11 @@ export default function HomePage() {
                     <td className="px-6 py-4">
                       <p className="font-medium text-gray-900">{lead.company}</p>
                       <p className="mt-1 text-xs text-gray-500">{lead.companyData.signal}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(lead.score)}`}>
+                        {lead.score}
+                      </span>
                     </td>
                     <td className="px-6 py-4">{lead.persona}</td>
                     <td className="px-6 py-4">
