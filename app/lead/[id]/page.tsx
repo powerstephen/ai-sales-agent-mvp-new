@@ -3,6 +3,19 @@ import { notFound } from "next/navigation";
 import InsightCard from "@/components/InsightCard";
 import { getLeadById } from "@/lib/data";
 import { analyzeLead } from "@/lib/openai";
+import { getSignalCards } from "@/lib/scoring";
+
+function getScoreColor(score: number) {
+  if (score >= 80) return "text-green-600";
+  if (score >= 60) return "text-amber-500";
+  return "text-gray-400";
+}
+
+function getPriorityLabel(score: number) {
+  if (score >= 80) return "High Priority";
+  if (score >= 60) return "Medium Priority";
+  return "Low Priority";
+}
 
 export default async function LeadPage({ params }: { params: { id: string } }) {
   const lead = getLeadById(params.id);
@@ -12,6 +25,7 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
   }
 
   const analysis = await analyzeLead(lead);
+  const signals = getSignalCards(lead);
 
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
@@ -30,11 +44,51 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
+        <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Lead Score</p>
+              <div className="mt-2 flex items-end gap-4">
+                <div className={`text-7xl font-bold leading-none ${getScoreColor(analysis.score)}`}>
+                  {analysis.score}
+                </div>
+                <div className="pb-2 text-lg font-medium text-gray-600">{getPriorityLabel(analysis.score)}</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {analysis.whyNow.slice(0, 5).map((item, index) => (
+                <span
+                  key={index}
+                  className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {signals.map((signal, index) => (
+            <div
+              key={index}
+              className={`rounded-2xl border p-4 text-sm font-medium ${
+                signal.active
+                  ? "border-green-200 bg-green-50 text-green-800"
+                  : "border-gray-200 bg-gray-50 text-gray-400"
+              }`}
+            >
+              {signal.label}
+            </div>
+          ))}
+        </div>
+
         <div className="mb-8 grid gap-4 md:grid-cols-4">
           <InsightCard label="ICP fit" value={analysis.icpFit} />
           <InsightCard label="Persona" value={analysis.persona} />
           <InsightCard label="State" value={analysis.state} />
-          <InsightCard label="Priority" value={analysis.priority} />
+          <InsightCard label="Suggested action" value={analysis.suggestedAction} />
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
@@ -60,7 +114,7 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Lifecycle stage</p>
-                  <p className="mt-2 text-sm text-gray-900">{lead.lifecycleStage}</p>
+                  <p className="mt-2 text-sm text-gray-900 capitalize">{lead.lifecycleStage}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Last contacted</p>
@@ -93,7 +147,7 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
               <p className="mt-4 text-sm leading-6 text-gray-700">{analysis.reasoning}</p>
 
               <div className="mt-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Why now</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Why this scored high</p>
                 <ul className="mt-3 space-y-2">
                   {analysis.whyNow.map((item, index) => (
                     <li key={index} className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
@@ -105,7 +159,6 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
 
               <div className="mt-5 grid gap-4">
                 <InsightCard label="Suggested angle" value={analysis.angle} />
-                <InsightCard label="Suggested action" value={analysis.suggestedAction} />
               </div>
             </div>
 
@@ -117,14 +170,18 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
 
               <div className="mt-5 flex flex-wrap gap-3">
                 <button className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
-                  Approve
+                  Send Now
                 </button>
                 <button className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-                  Regenerate
+                  Send + Schedule Follow-Up
                 </button>
                 <button className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
                   Push to nurture
                 </button>
+              </div>
+
+              <div className="mt-4 text-xs text-gray-500">
+                Follow-up timing can later be made configurable by the client, for example 3, 5, or 7 days.
               </div>
             </div>
           </aside>
