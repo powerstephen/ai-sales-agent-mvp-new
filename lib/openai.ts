@@ -1,4 +1,4 @@
-import { getAngle, getICPFit, getLeadState, getPersona, getPriority } from "@/lib/scoring";
+import { getAngle, getICPFit, getLeadScore, getLeadState, getPersona, getPriority, getScoreBreakdown } from "@/lib/scoring";
 import { Lead, LeadAnalysis } from "@/lib/types";
 
 export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
@@ -7,19 +7,13 @@ export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
   const state = getLeadState(lead);
   const priority = getPriority(lead);
   const angle = getAngle(lead);
+  const score = getLeadScore(lead);
 
-  const whyNow: string[] = [
+  const whyNow = [
+    ...getScoreBreakdown(lead),
     `Not contacted in ${lead.lastContactedDays} days`,
     `Company signal: ${lead.companyData.signal}`,
   ];
-
-  const recentActivity = lead.activities
-    .filter((activity) => activity.daysAgo <= 35)
-    .map((activity) => `${activity.type.replace(/_/g, " ")} ${activity.daysAgo} days ago`);
-
-  if (recentActivity.length > 0) {
-    whyNow.push(`Recent engagement: ${recentActivity.join(", ")}`);
-  }
 
   const firstName = lead.name.split(" ")[0];
 
@@ -28,7 +22,8 @@ export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
     persona,
     state,
     priority,
-    reasoning: `${lead.name} is a ${lead.title} at ${lead.company}, which is a ${lead.companyData.industry} business with ${lead.companyData.employees} employees. The account is ${state.toLowerCase()}, the ICP fit is ${icpFit.toLowerCase()}, and there are recent or historical signs that the problem is still relevant. This makes it a sensible account to prioritise for a personalised re-engagement.`,
+    score,
+    reasoning: `${lead.name} scores strongly because the account is a solid fit, the contact is senior enough to care about commercial outcomes, there is evidence of either growth or process change at the company, and there are signs the opportunity may have been under-worked rather than truly lost.`,
     whyNow,
     angle,
     suggestedAction:
@@ -48,12 +43,14 @@ Given your role in ${
         ? "sales leadership"
         : persona === "Founder"
         ? "running the business"
-        : "driving growth"
-    }, I thought this might be relevant.
+        : persona === "marketing and growth"
+    }, I thought this might be worth a quick note.
 
-A lot of teams at this stage find that good-fit leads and warm opportunities sit in the CRM without the right next step, especially when the team is busy and coverage is inconsistent.
+A lot of teams at this stage have good-fit leads and warm opportunities sitting in the CRM without a clear next step, especially when the team is stretched or priorities have shifted.
 
-We’ve been working on a way to identify which dormant or under-worked accounts are worth re-engaging, then generate the right follow-up based on context, persona, and timing.
+From what I can see, this looks more like a coverage and timing issue than a lack of demand.
+
+We’ve been working on a way to surface the best dormant opportunities and generate the right re-engagement based on context, persona and previous signals.
 
 Worth a quick look?
 
