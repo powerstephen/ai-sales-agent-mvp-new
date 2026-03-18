@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import InsightCard from "@/components/InsightCard";
 import { getLeadById } from "@/lib/data";
 import { analyzeLead } from "@/lib/openai";
 import { getSignalCards } from "@/lib/scoring";
@@ -20,9 +19,7 @@ function getPriorityLabel(score: number) {
 export default async function LeadPage({ params }: { params: { id: string } }) {
   const lead = getLeadById(params.id);
 
-  if (!lead) {
-    notFound();
-  }
+  if (!lead) return notFound();
 
   const analysis = await analyzeLead(lead);
   const signals = getSignalCards(lead);
@@ -30,37 +27,44 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
       <div className="mx-auto max-w-6xl">
+
+        {/* HEADER */}
         <div className="mb-8">
           <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to dashboard
+            ← Back
           </Link>
 
-          <div className="mt-4">
-            <p className="text-sm font-medium text-gray-500">Lead detail</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-gray-900">{lead.name}</h1>
-            <p className="mt-2 text-base text-gray-600">
-              {lead.title} at {lead.company}
-            </p>
-          </div>
+          <h1 className="mt-4 text-3xl font-semibold text-gray-900">
+            {lead.name}
+          </h1>
+          <p className="text-gray-600">
+            {lead.title} at {lead.company}
+          </p>
         </div>
 
-        <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        {/* HERO */}
+        <div className="mb-8 rounded-3xl border bg-white p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
+
+            {/* SCORE */}
             <div>
-              <p className="text-sm font-medium text-gray-500">Lead Score</p>
-              <div className="mt-2 flex items-end gap-4">
-                <div className={`text-7xl font-bold leading-none ${getScoreColor(analysis.score)}`}>
+              <p className="text-sm text-gray-500">Lead Score</p>
+              <div className="flex items-end gap-4 mt-2">
+                <div className={`text-7xl font-bold ${getScoreColor(analysis.score)}`}>
                   {analysis.score}
                 </div>
-                <div className="pb-2 text-lg font-medium text-gray-600">{getPriorityLabel(analysis.score)}</div>
+                <div className="text-lg text-gray-600 pb-2">
+                  {getPriorityLabel(analysis.score)}
+                </div>
               </div>
             </div>
 
+            {/* TAGS */}
             <div className="flex flex-wrap gap-2">
-              {analysis.whyNow.slice(0, 5).map((item, index) => (
+              {analysis.whyNow.slice(0, 4).map((item, i) => (
                 <span
-                  key={index}
-                  className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800"
+                  key={i}
+                  className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full"
                 >
                   {item}
                 </span>
@@ -69,122 +73,109 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {signals.map((signal, index) => (
+        {/* SIGNAL GRID */}
+        <div className="mb-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {signals.map((s, i) => (
             <div
-              key={index}
-              className={`rounded-2xl border p-4 text-sm font-medium ${
-                signal.active
-                  ? "border-green-200 bg-green-50 text-green-800"
-                  : "border-gray-200 bg-gray-50 text-gray-400"
+              key={i}
+              className={`rounded-xl border p-4 text-sm font-medium ${
+                s.active
+                  ? "bg-green-50 text-green-800 border-green-200"
+                  : "bg-gray-50 text-gray-400 border-gray-200"
               }`}
             >
-              {signal.label}
+              {s.label}
             </div>
           ))}
         </div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-4">
-          <InsightCard label="ICP fit" value={analysis.icpFit} />
-          <InsightCard label="Persona" value={analysis.persona} />
-          <InsightCard label="State" value={analysis.state} />
-          <InsightCard label="Suggested action" value={analysis.suggestedAction} />
-        </div>
+        {/* MAIN GRID */}
+        <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8">
 
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-          <section className="space-y-8">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">Company and contact context</h2>
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Company</p>
-                  <p className="mt-2 text-sm text-gray-900">{lead.company}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Industry</p>
-                  <p className="mt-2 text-sm text-gray-900">{lead.companyData.industry}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Employees</p>
-                  <p className="mt-2 text-sm text-gray-900">{lead.companyData.employees}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Signal</p>
-                  <p className="mt-2 text-sm text-gray-900">{lead.companyData.signal}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Lifecycle stage</p>
-                  <p className="mt-2 text-sm text-gray-900 capitalize">{lead.lifecycleStage}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Last contacted</p>
-                  <p className="mt-2 text-sm text-gray-900">{lead.lastContactedDays} days ago</p>
-                </div>
-              </div>
+          {/* LEFT SIDE */}
+          <div className="space-y-6">
+
+            {/* WHY THIS LEAD */}
+            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Why this lead now
+              </h2>
+
+              <p className="mt-3 text-sm text-gray-700 leading-6">
+                {analysis.reasoning}
+              </p>
+
+              <ul className="mt-4 space-y-2">
+                {analysis.whyNow.slice(0, 4).map((item, i) => (
+                  <li
+                    key={i}
+                    className="text-sm bg-gray-50 px-3 py-2 rounded-lg"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">Activity timeline</h2>
-              <div className="mt-5 space-y-4">
-                {lead.activities.map((activity, index) => (
-                  <div key={`${activity.type}-${index}`} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-sm font-medium capitalize text-gray-900">
-                        {activity.type.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-sm text-gray-500">{activity.daysAgo} days ago</p>
+            {/* TIMELINE */}
+            <div className="bg-white border rounded-2xl p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Activity
+              </h2>
+
+              <div className="mt-4 space-y-3">
+                {lead.activities.map((a, i) => (
+                  <div key={i} className="bg-gray-50 p-3 rounded-lg text-sm">
+                    <div className="flex justify-between">
+                      <span className="capitalize text-gray-900">
+                        {a.type.replace(/_/g, " ")}
+                      </span>
+                      <span className="text-gray-500">{a.daysAgo}d ago</span>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-gray-700">{activity.note}</p>
+                    <p className="mt-1 text-gray-700">{a.note}</p>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
+          </div>
 
-          <aside className="space-y-8">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">AI reasoning</h2>
-              <p className="mt-4 text-sm leading-6 text-gray-700">{analysis.reasoning}</p>
+          {/* RIGHT SIDE — EMAIL */}
+          <div className="bg-white border rounded-2xl p-6 shadow-sm">
 
-              <div className="mt-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Why this scored high</p>
-                <ul className="mt-3 space-y-2">
-                  {analysis.whyNow.map((item, index) => (
-                    <li key={index} className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Suggested outreach
+            </h2>
+
+            {/* EMAIL PREVIEW */}
+            <div className="mt-4 border rounded-xl p-4 bg-gray-50">
+
+              <div className="text-xs text-gray-500 mb-2">
+                From: Stephen  
+                <br />
+                To: {lead.email}
               </div>
 
-              <div className="mt-5 grid gap-4">
-                <InsightCard label="Suggested angle" value={analysis.angle} />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">Suggested email</h2>
-              <div className="mt-4 rounded-xl bg-gray-50 p-4">
-                <pre className="whitespace-pre-wrap text-sm leading-6 text-gray-800">{analysis.email}</pre>
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800">
-                  Send Now
-                </button>
-                <button className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-                  Send + Schedule Follow-Up
-                </button>
-                <button className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-                  Push to nurture
-                </button>
-              </div>
-
-              <div className="mt-4 text-xs text-gray-500">
-                Follow-up timing can later be made configurable by the client, for example 3, 5, or 7 days.
+              <div className="bg-white border rounded-lg p-4 text-sm leading-6 text-gray-800 max-w-full">
+                <pre className="whitespace-pre-wrap">
+{analysis.email}
+                </pre>
               </div>
             </div>
-          </aside>
+
+            {/* ACTIONS */}
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button className="bg-black text-white px-4 py-2 rounded-lg text-sm">
+                Send now
+              </button>
+              <button className="border px-4 py-2 rounded-lg text-sm">
+                Send + follow-up
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-3">
+              Follow-up timing (3, 5, 7 days) can be configurable.
+            </p>
+          </div>
         </div>
       </div>
     </main>
