@@ -9,7 +9,7 @@ import {
 } from "@/lib/scoring";
 import { Lead, LeadAnalysis } from "@/lib/types";
 
-export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
+export async function analyzeLead(lead: Lead): Promise<LeadAnalysis & { followUpEmail: string }> {
   const icpFit = getICPFit(lead);
   const persona = getPersona(lead.title);
   const state = getLeadState(lead);
@@ -25,13 +25,35 @@ export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
 
   const firstName = lead.name.split(" ")[0];
 
+  const email = `Hi ${firstName},
+
+I saw ${lead.company} is ${lead.companyData.signal.toLowerCase()}.
+
+Usually at this stage, teams have strong-fit opportunities sitting in the CRM that just haven’t been worked properly.
+
+From your side, it looks more like a coverage / timing issue than a demand problem.
+
+Worth a quick look?
+
+Stephen`;
+
+  const followUpEmail = `Hi ${firstName},
+
+Just looping back on this.
+
+A lot of teams we speak to already have pipeline sitting there — it’s just not being prioritised or worked consistently.
+
+Happy to share a quick example if useful.
+
+Stephen`;
+
   return {
     icpFit,
     persona,
     state,
     priority,
     score,
-    reasoning: `${lead.name} scores strongly because the account is a solid fit, the contact is senior enough to care about commercial outcomes, there is evidence of either growth or process change at the company, and there are signs the opportunity may have been under-worked rather than truly lost.`,
+    reasoning: `${lead.name} looks like a strong opportunity based on fit, seniority, and clear signals that pipeline may be underutilised.`,
     whyNow,
     angle,
     suggestedAction:
@@ -40,31 +62,7 @@ export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
         : priority === "Medium"
         ? "Assign to SDR"
         : "Push to nurture",
-    email: `Hi ${firstName},
-
-I noticed ${lead.company} is ${lead.companyData.signal.toLowerCase()}.
-
-Given your role in ${
-      persona === "RevOps"
-        ? "revenue operations"
-        : persona === "Sales Leader"
-        ? "sales leadership"
-        : persona === "Founder"
-        ? "running the business"
-        : persona === "Marketing Leader"
-        ? "marketing and growth"
-        : "driving growth"
-    }, I thought this might be worth a quick note.
-
-A lot of teams at this stage have good-fit leads and warm opportunities sitting in the CRM without a clear next step, especially when the team is stretched or priorities have shifted.
-
-From what I can see, this looks more like a coverage and timing issue than a lack of demand.
-
-We’ve been working on a way to surface the best dormant opportunities and generate the right re-engagement based on context, persona and previous signals.
-
-Worth a quick look?
-
-Best,
-Stephen`,
+    email,
+    followUpEmail,
   };
 }
