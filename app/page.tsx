@@ -1,51 +1,113 @@
-import LeadTable from '@/components/LeadTable';
-import { getLeadRecords } from '@/lib/data';
-import { buildFallbackAnalysis } from '@/lib/scoring';
+import Link from "next/link";
+import { leads } from "@/lib/data";
+import { getICPFit, getLeadState, getPersona, getPriority } from "@/lib/scoring";
 
 export default function HomePage() {
-  const leads = getLeadRecords();
-  const highFitDormant = leads.filter((lead) => {
-    const analysis = buildFallbackAnalysis(lead);
-    return analysis.icp_fit !== 'Low' && lead.contact.last_contacted_days_ago >= 45;
-  });
+  const enrichedLeads = leads.map((lead) => ({
+    ...lead,
+    icpFit: getICPFit(lead),
+    persona: getPersona(lead.title),
+    state: getLeadState(lead),
+    priority: getPriority(lead),
+  }));
 
-  const companies = new Set(highFitDormant.map((lead) => lead.company.name)).size;
+  const highPriority = enrichedLeads.filter((lead) => lead.priority === "High").length;
+  const dormant = enrichedLeads.filter((lead) => lead.state === "Dormant").length;
+  const warmNeglected = enrichedLeads.filter((lead) => lead.state === "Warm but Neglected").length;
+  const highICP = enrichedLeads.filter((lead) => lead.icpFit === "High").length;
 
   return (
-    <main className="min-h-screen bg-shell">
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="rounded-[32px] border border-line bg-white p-8 shadow-soft">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">AI Revenue Reactivation Agent</div>
-              <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight text-slate-900">
-                Surface the best dormant opportunities in your CRM and generate the right next step instantly.
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                This MVP simulates HubSpot-style CRM data, including notes, call summaries and meeting context. It identifies high-fit dormant leads, explains why they matter now, and drafts a tailored re-engagement email.
-              </p>
-            </div>
-            <div className="grid min-w-[280px] grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dormant high-fit leads</div>
-                <div className="mt-2 text-3xl font-bold text-slate-900">{highFitDormant.length}</div>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Companies surfaced</div>
-                <div className="mt-2 text-3xl font-bold text-slate-900">{companies}</div>
-              </div>
-            </div>
+    <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8">
+          <p className="text-sm font-medium text-gray-500">AI Sales Agent MVP</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+            Dormant pipeline recovery dashboard
+          </h1>
+          <p className="mt-3 max-w-3xl text-base text-gray-600">
+            Identify high-fit neglected leads, understand why they matter now, and generate a more relevant next step based on persona, timing, and CRM context.
+          </p>
+        </div>
+
+        <div className="mb-8 grid gap-4 md:grid-cols-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-gray-500">Total leads</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">{enrichedLeads.length}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-gray-500">High priority</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">{highPriority}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-gray-500">High ICP fit</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">{highICP}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-gray-500">Warm but neglected</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">{warmNeglected}</p>
           </div>
         </div>
 
-        <div className="mt-8 mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">Dormant opportunities dashboard</h2>
-            <p className="mt-1 text-sm text-slate-600">Click into any lead to view the AI reasoning, CRM context and generated email.</p>
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900">Opportunities surfaced</h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr className="text-left text-sm text-gray-500">
+                  <th className="px-6 py-4 font-medium">Lead</th>
+                  <th className="px-6 py-4 font-medium">Company</th>
+                  <th className="px-6 py-4 font-medium">Persona</th>
+                  <th className="px-6 py-4 font-medium">ICP fit</th>
+                  <th className="px-6 py-4 font-medium">State</th>
+                  <th className="px-6 py-4 font-medium">Priority</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {enrichedLeads.map((lead) => (
+                  <tr key={lead.id} className="text-sm text-gray-700">
+                    <td className="px-6 py-4">
+                      <Link href={`/lead/${lead.id}`} className="font-medium text-gray-900 hover:text-gray-600">
+                        {lead.name}
+                      </Link>
+                      <p className="mt-1 text-xs text-gray-500">{lead.title}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">{lead.company}</p>
+                      <p className="mt-1 text-xs text-gray-500">{lead.companyData.signal}</p>
+                    </td>
+                    <td className="px-6 py-4">{lead.persona}</td>
+                    <td className="px-6 py-4">
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
+                        {lead.icpFit}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{lead.state}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          lead.priority === "High"
+                            ? "bg-black text-white"
+                            : lead.priority === "Medium"
+                            ? "bg-gray-200 text-gray-900"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {lead.priority}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <LeadTable leads={highFitDormant} />
+        <div className="mt-8 text-sm text-gray-500">
+          Dormant: {dormant} · Warm but neglected: {warmNeglected}
+        </div>
       </div>
     </main>
   );
