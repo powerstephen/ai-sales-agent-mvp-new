@@ -1,6 +1,6 @@
 type InsightCardProps = {
   label: string;
-  value: string;
+  value: string | number;
 };
 
 export default function InsightCard({ label, value }: InsightCardProps) {
