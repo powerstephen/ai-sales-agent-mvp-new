@@ -1,217 +1,174 @@
-import { Company, Contact, LeadRecord } from '@/lib/types';
+import { Lead } from "@/lib/types";
 
-export const companies: Company[] = [
+export const leads: Lead[] = [
   {
-    id: 'co_001',
-    name: 'RevScale',
-    domain: 'revscale.io',
-    industry: 'B2B SaaS',
-    employee_count: 120,
-    location: 'Germany',
-    recent_signal: 'Hiring SDRs and AEs across EMEA'
+    id: "lead_001",
+    name: "Barry O'Sullivan",
+    email: "barry@revscale.io",
+    title: "Head of Sales",
+    company: "RevScale",
+    lifecycleStage: "lead",
+    lastContactedDays: 72,
+    companyData: {
+      industry: "B2B SaaS",
+      employees: 120,
+      location: "Dublin, Ireland",
+      signal: "Hiring 5 SDRs and 2 AEs",
+      domain: "revscale.io",
+    },
+    activities: [
+      { type: "call", note: "Discussed scaling outbound and rep productivity concerns.", daysAgo: 75 },
+      { type: "email_open", note: "Opened pricing follow-up email.", daysAgo: 10 },
+      { type: "note", note: "Mentioned team was stretched and coverage was inconsistent.", daysAgo: 74 },
+    ],
   },
   {
-    id: 'co_002',
-    name: 'LogiHub',
-    domain: 'logihub.com',
-    industry: 'Logistics SaaS',
-    employee_count: 300,
-    location: 'United Kingdom',
-    recent_signal: 'Raised Series B four months ago and launched a new analytics module'
+    id: "lead_002",
+    name: "Anna Meyer",
+    email: "anna@revscale.io",
+    title: "VP Revenue Operations",
+    company: "RevScale",
+    lifecycleStage: "opportunity",
+    lastContactedDays: 45,
+    companyData: {
+      industry: "B2B SaaS",
+      employees: 120,
+      location: "Berlin, Germany",
+      signal: "Hiring SDRs and implementing a new CRM process",
+      domain: "revscale.io",
+    },
+    activities: [
+      { type: "webinar", note: "Attended webinar on pipeline coverage and reactivation.", daysAgo: 30 },
+      { type: "email_click", note: "Clicked case study about dormant lead recovery.", daysAgo: 28 },
+      { type: "note", note: "Interested in operational efficiency more than net-new tooling.", daysAgo: 44 },
+    ],
   },
   {
-    id: 'co_003',
-    name: 'OpsPilot',
-    domain: 'opspilot.ai',
-    industry: 'Revenue Operations SaaS',
-    employee_count: 75,
-    location: 'Netherlands',
-    recent_signal: 'Hosted a webinar on pipeline efficiency six weeks ago'
+    id: "lead_003",
+    name: "James Wright",
+    email: "james@logihub.com",
+    title: "Director of Sales",
+    company: "LogiHub",
+    lifecycleStage: "lead",
+    lastContactedDays: 91,
+    companyData: {
+      industry: "Logistics SaaS",
+      employees: 280,
+      location: "London, UK",
+      signal: "Raised Series B 4 months ago",
+      domain: "logihub.com",
+    },
+    activities: [
+      { type: "meeting", note: "Initial discovery meeting. Strong fit but poor timing.", daysAgo: 102 },
+      { type: "note", note: "Said they would revisit once new budget cycle opened.", daysAgo: 101 },
+    ],
   },
   {
-    id: 'co_004',
-    name: 'CrewStack',
-    domain: 'crewstack.com',
-    industry: 'Maritime HR SaaS',
-    employee_count: 210,
-    location: 'Denmark',
-    recent_signal: 'Hiring customer success and sales operations roles'
+    id: "lead_004",
+    name: "Sophie Laurent",
+    email: "sophie@funnelpilot.ai",
+    title: "Head of RevOps",
+    company: "FunnelPilot",
+    lifecycleStage: "stalled",
+    lastContactedDays: 67,
+    companyData: {
+      industry: "B2B SaaS",
+      employees: 85,
+      location: "Paris, France",
+      signal: "Hiring RevOps Analyst and SDR Manager",
+      domain: "funnelpilot.ai",
+    },
+    activities: [
+      { type: "call", note: "Wanted better prioritisation across stale pipeline.", daysAgo: 70 },
+      { type: "email_open", note: "Opened follow-up email with use case summary.", daysAgo: 9 },
+      { type: "note", note: "Mentioned CRM is full of old leads that no one touches.", daysAgo: 69 },
+    ],
   },
   {
-    id: 'co_005',
-    name: 'FlowMetric',
-    domain: 'flowmetric.io',
-    industry: 'B2B SaaS',
-    employee_count: 48,
-    location: 'Ireland',
-    recent_signal: 'No visible company news in recent months'
+    id: "lead_005",
+    name: "Liam Carter",
+    email: "liam@crewstack.com",
+    title: "Founder",
+    company: "CrewStack",
+    lifecycleStage: "lead",
+    lastContactedDays: 58,
+    companyData: {
+      industry: "Maritime Workforce SaaS",
+      employees: 60,
+      location: "Amsterdam, Netherlands",
+      signal: "Expanding go-to-market team after strong quarter",
+      domain: "crewstack.com",
+    },
+    activities: [
+      { type: "meeting", note: "Explored how to improve commercial efficiency with a small team.", daysAgo: 61 },
+      { type: "note", note: "Founder was interested but wanted to revisit post-quarter.", daysAgo: 60 },
+      { type: "email_open", note: "Opened recap email.", daysAgo: 14 },
+    ],
   },
   {
-    id: 'co_006',
-    name: 'ProcurePath',
-    domain: 'procurepath.ai',
-    industry: 'Procurement SaaS',
-    employee_count: 160,
-    location: 'United States',
-    recent_signal: 'Recently expanded into EMEA and published a customer case study'
-  }
+    id: "lead_006",
+    name: "Maria Jensen",
+    email: "maria@adlift.io",
+    title: "VP Marketing",
+    company: "AdLift",
+    lifecycleStage: "lead",
+    lastContactedDays: 76,
+    companyData: {
+      industry: "Marketing Software",
+      employees: 210,
+      location: "Copenhagen, Denmark",
+      signal: "Launching new product line",
+      domain: "adlift.io",
+    },
+    activities: [
+      { type: "webinar", note: "Attended webinar on improving conversion from existing demand.", daysAgo: 33 },
+      { type: "email_click", note: "Clicked product overview for conversion optimisation.", daysAgo: 31 },
+      { type: "note", note: "Interested in better downstream conversion, not just more leads.", daysAgo: 75 },
+    ],
+  },
+  {
+    id: "lead_007",
+    name: "Tom Becker",
+    email: "tom@opsmate.com",
+    title: "Head of Sales",
+    company: "OpsMate",
+    lifecycleStage: "lead",
+    lastContactedDays: 22,
+    companyData: {
+      industry: "Operations SaaS",
+      employees: 150,
+      location: "Munich, Germany",
+      signal: "Expanding into UK market",
+      domain: "opsmate.com",
+    },
+    activities: [
+      { type: "call", note: "Recent discovery call.", daysAgo: 25 },
+      { type: "note", note: "Wanted examples specific to scaling into new regions.", daysAgo: 24 },
+    ],
+  },
+  {
+    id: "lead_008",
+    name: "Eleanor Shaw",
+    email: "eleanor@signalpath.io",
+    title: "Revenue Operations Director",
+    company: "SignalPath",
+    lifecycleStage: "stalled",
+    lastContactedDays: 83,
+    companyData: {
+      industry: "B2B SaaS",
+      employees: 340,
+      location: "Manchester, UK",
+      signal: "Reviewing sales process and funnel leakage",
+      domain: "signalpath.io",
+    },
+    activities: [
+      { type: "meeting", note: "Strong interest in identifying neglected warm pipeline.", daysAgo: 88 },
+      { type: "email_open", note: "Opened follow-up twice.", daysAgo: 7 },
+      { type: "note", note: "Said timing was bad due to quarter-end priorities.", daysAgo: 87 },
+    ],
+  },
 ];
 
-export const contacts: Contact[] = [
-  {
-    id: 'c_001',
-    first_name: 'Barry',
-    last_name: "O'Sullivan",
-    email: 'barry@revscale.io',
-    job_title: 'Head of Sales',
-    company_id: 'co_001',
-    lifecycle_stage: 'lead',
-    last_contacted_days_ago: 72,
-    last_engagement: { type: 'email_open', days_ago: 10 },
-    notes: [
-      'Mentioned SDR ramp time was slower than expected.',
-      'Interested in pipeline coverage and handoff quality.'
-    ],
-    meetings: [
-      {
-        title: 'Intro call',
-        days_ago: 95,
-        summary: 'Barry wanted practical ideas to improve outbound consistency across a new SDR team.'
-      }
-    ],
-    calls: [
-      {
-        days_ago: 95,
-        summary: 'Good initial fit. Timing was not right due to hiring freeze at the time.'
-      }
-    ]
-  },
-  {
-    id: 'c_002',
-    first_name: 'Anna',
-    last_name: 'Meyer',
-    email: 'anna@revscale.io',
-    job_title: 'VP Revenue Operations',
-    company_id: 'co_001',
-    lifecycle_stage: 'opportunity',
-    last_contacted_days_ago: 45,
-    last_engagement: { type: 'webinar_attended', days_ago: 30 },
-    notes: ['Asked for examples showing better lead routing and SLA adherence.'],
-    meetings: [
-      {
-        title: 'Demo follow-up',
-        days_ago: 60,
-        summary: 'Anna cared most about workflow logic, stale lead detection and reporting.'
-      }
-    ]
-  },
-  {
-    id: 'c_003',
-    first_name: 'James',
-    last_name: 'Wright',
-    email: 'james@logihub.com',
-    job_title: 'Director of Sales',
-    company_id: 'co_002',
-    lifecycle_stage: 'lead',
-    last_contacted_days_ago: 90,
-    last_engagement: { type: 'none', days_ago: null },
-    notes: ['Had interest before the new budget cycle.'],
-    calls: [
-      {
-        days_ago: 115,
-        summary: 'Said the business was focused on product rollout, not sales process changes yet.'
-      }
-    ]
-  },
-  {
-    id: 'c_004',
-    first_name: 'Sophie',
-    last_name: 'van Dijk',
-    email: 'sophie@opspilot.ai',
-    job_title: 'Head of Revenue Operations',
-    company_id: 'co_003',
-    lifecycle_stage: 'salesqualifiedlead',
-    last_contacted_days_ago: 54,
-    last_engagement: { type: 'meeting_attended', days_ago: 40 },
-    notes: ['Focused on pipeline leakage between marketing and SDR.'],
-    meetings: [
-      {
-        title: 'Pipeline workshop',
-        days_ago: 40,
-        summary: 'Strong fit. They wanted a lighter-weight way to surface neglected but warm accounts.'
-      }
-    ]
-  },
-  {
-    id: 'c_005',
-    first_name: 'Mikkel',
-    last_name: 'Jensen',
-    email: 'mikkel@crewstack.com',
-    job_title: 'Chief Revenue Officer',
-    company_id: 'co_004',
-    lifecycle_stage: 'lead',
-    last_contacted_days_ago: 67,
-    last_engagement: { type: 'email_click', days_ago: 8 },
-    notes: ['Very interested in visibility across sales and CS handoff.'],
-    calls: [
-      {
-        days_ago: 80,
-        summary: 'He liked the commercial story but needed clearer ROI proof and a use case for dormant leads.'
-      }
-    ]
-  },
-  {
-    id: 'c_006',
-    first_name: 'Clare',
-    last_name: 'Murphy',
-    email: 'clare@flowmetric.io',
-    job_title: 'Founder',
-    company_id: 'co_005',
-    lifecycle_stage: 'subscriber',
-    last_contacted_days_ago: 130,
-    last_engagement: { type: 'email_open', days_ago: 75 },
-    notes: ['Early stage founder, interested but limited budget.']
-  },
-  {
-    id: 'c_007',
-    first_name: 'Daniel',
-    last_name: 'Hart',
-    email: 'daniel@procurepath.ai',
-    job_title: 'VP Sales',
-    company_id: 'co_006',
-    lifecycle_stage: 'lead',
-    last_contacted_days_ago: 58,
-    last_engagement: { type: 'webinar_attended', days_ago: 21 },
-    notes: ['Wanted examples of pipeline recovery and rep productivity improvement.'],
-    meetings: [
-      {
-        title: 'Post-webinar chat',
-        days_ago: 21,
-        summary: 'Daniel said EMEA expansion makes coverage and follow-up consistency more important this quarter.'
-      }
-    ]
-  },
-  {
-    id: 'c_008',
-    first_name: 'Lea',
-    last_name: 'Schmidt',
-    email: 'lea@revscale.io',
-    job_title: 'Senior Demand Generation Manager',
-    company_id: 'co_001',
-    lifecycle_stage: 'marketingqualifiedlead',
-    last_contacted_days_ago: 51,
-    last_engagement: { type: 'note_added', days_ago: 48 },
-    notes: ['Mentioned webinar follow-up was inconsistent across regions.']
-  }
-];
-
-export function getLeadRecords(): LeadRecord[] {
-  return contacts.map((contact) => ({
-    contact,
-    company: companies.find((company) => company.id === contact.company_id)!
-  }));
-}
-
-export function getLeadById(id: string): LeadRecord | undefined {
-  return getLeadRecords().find((record) => record.contact.id === id);
+export function getLeadById(id: string) {
+  return leads.find((lead) => lead.id === id);
 }
