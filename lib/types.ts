@@ -1,61 +1,49 @@
 export type ActivityType =
-  | 'email_open'
-  | 'email_click'
-  | 'webinar_attended'
-  | 'meeting_attended'
-  | 'call_logged'
-  | 'note_added'
-  | 'none';
+  | "email_open"
+  | "email_click"
+  | "call"
+  | "meeting"
+  | "webinar"
+  | "note";
 
-export interface Engagement {
+export type Activity = {
   type: ActivityType;
-  days_ago: number | null;
-}
+  note: string;
+  daysAgo: number;
+};
 
-export interface Contact {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  job_title: string;
-  company_id: string;
-  lifecycle_stage: 'subscriber' | 'lead' | 'marketingqualifiedlead' | 'salesqualifiedlead' | 'opportunity' | 'customer';
-  last_contacted_days_ago: number;
-  last_engagement: Engagement;
-  notes?: string[];
-  meetings?: {
-    title: string;
-    days_ago: number;
-    summary: string;
-  }[];
-  calls?: {
-    days_ago: number;
-    summary: string;
-  }[];
-}
+export type CompanyData = {
+  industry: string;
+  employees: number;
+  location: string;
+  signal: string;
+  domain: string;
+};
 
-export interface Company {
+export type Lead = {
   id: string;
   name: string;
-  domain: string;
-  industry: string;
-  employee_count: number;
-  location: string;
-  recent_signal: string;
-}
+  email: string;
+  title: string;
+  company: string;
+  lifecycleStage: "lead" | "opportunity" | "customer" | "stalled";
+  lastContactedDays: number;
+  companyData: CompanyData;
+  activities: Activity[];
+};
 
-export interface LeadRecord {
-  contact: Contact;
-  company: Company;
-}
+export type ICPFit = "High" | "Medium" | "Low";
+export type Persona = "Sales Leader" | "RevOps" | "Founder" | "Marketing Leader" | "Other";
+export type LeadState = "Dormant" | "Warm but Neglected" | "At Risk" | "Active";
 
-export interface AnalysisResult {
-  icp_fit: 'High' | 'Medium' | 'Low';
-  persona: string;
-  state: string;
+export type LeadAnalysis = {
+  icpFit: ICPFit;
+  persona: Persona;
+  state: LeadState;
+  priority: "High" | "Medium" | "Low";
+  reasoning: string;
+  whyNow: string[];
   angle: string;
-  why_now: string[];
-  next_action: string;
-  suggested_subject: string;
-  email_body: string;
-}
+  suggestedAction: "Re-engage now" | "Push to nurture" | "Assign to SDR" | "Low priority";
+  email: string;
+};
