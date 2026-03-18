@@ -37,14 +37,16 @@ export async function analyzeLead(lead: Lead): Promise<LeadAnalysis> {
 I noticed ${lead.company} is ${lead.companyData.signal.toLowerCase()}.
 
 Given your role in ${
-      persona === "RevOps"
-        ? "revenue operations"
-        : persona === "Sales Leader"
-        ? "sales leadership"
-        : persona === "Founder"
-        ? "running the business"
-        : persona === "marketing and growth"
-    }, I thought this might be worth a quick note.
+  persona === "RevOps"
+    ? "revenue operations"
+    : persona === "Sales Leader"
+    ? "sales leadership"
+    : persona === "Founder"
+    ? "running the business"
+    : persona === "Marketing Leader"
+    ? "marketing and growth"
+    : "driving growth"
+}, I thought this might be worth a quick note.
 
 A lot of teams at this stage have good-fit leads and warm opportunities sitting in the CRM without a clear next step, especially when the team is stretched or priorities have shifted.
 
