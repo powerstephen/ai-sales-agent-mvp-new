@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { leads } from "@/lib/data";
+import { buildICP, calculateICPMatchScore } from "@/lib/icp";
 import { getICPFit, getLeadScore, getLeadState, getPersona, getPriority } from "@/lib/scoring";
 
 function getScoreStyles(score: number) {
@@ -9,6 +10,8 @@ function getScoreStyles(score: number) {
 }
 
 export default function HomePage() {
+  const icp = buildICP(leads);
+
   const enrichedLeads = leads
     .map((lead) => ({
       ...lead,
@@ -17,6 +20,7 @@ export default function HomePage() {
       state: getLeadState(lead),
       priority: getPriority(lead),
       score: getLeadScore(lead),
+      icpMatchScore: calculateICPMatchScore(lead, icp),
     }))
     .sort((a, b) => b.score - a.score);
 
@@ -30,6 +34,9 @@ export default function HomePage() {
   );
   const estimatedPipeline = highValueDormant.length * 20000;
 
+  const pipelineMatches = enrichedLeads.filter((lead) => lead.icpMatchScore >= 70).length;
+  const pipelineQuality = Math.round((pipelineMatches / enrichedLeads.length) * 100);
+
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
       <div className="mx-auto max-w-7xl">
@@ -39,7 +46,7 @@ export default function HomePage() {
             Dormant pipeline recovery dashboard
           </h1>
           <p className="mt-3 max-w-3xl text-base text-gray-600">
-            Rank neglected leads, understand why they matter now, and generate the next best action based on fit, timing, engagement and pain signals.
+            Rank neglected leads, learn from revenue patterns, and generate the next best action based on fit, timing, engagement and pain signals.
           </p>
         </div>
 
@@ -65,6 +72,55 @@ export default function HomePage() {
             >
               View sample lead
             </Link>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Your best customers</p>
+              <h2 className="mt-2 text-2xl font-semibold text-gray-900">{icp.label}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+                Based on won-revenue patterns, your strongest segment appears to be {icp.industry} companies with {icp.employeeBand} employees, typically buying through {icp.persona} stakeholders.
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-amber-50 px-5 py-4">
+              <p className="text-sm text-amber-800">
+                Only <span className="font-semibold">{pipelineQuality}%</span> of your current pipeline matches your best-performing ICP
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Industry</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">{icp.industry}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Company size</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">{icp.employeeBand}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Primary persona</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">{icp.persona}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Avg deal size</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">€{icp.avgDealSize.toLocaleString()}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Win rate</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">{icp.winRate}%</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {icp.notes.map((note, index) => (
+              <div key={index} className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900">
+                {note}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -99,8 +155,8 @@ export default function HomePage() {
                   <th className="px-6 py-4 font-medium">Lead</th>
                   <th className="px-6 py-4 font-medium">Company</th>
                   <th className="px-6 py-4 font-medium">Score</th>
+                  <th className="px-6 py-4 font-medium">ICP Match</th>
                   <th className="px-6 py-4 font-medium">Persona</th>
-                  <th className="px-6 py-4 font-medium">ICP fit</th>
                   <th className="px-6 py-4 font-medium">State</th>
                   <th className="px-6 py-4 font-medium">Priority</th>
                 </tr>
@@ -127,12 +183,16 @@ export default function HomePage() {
                         {lead.score}
                       </span>
                     </td>
-                    <td className="px-6 py-4">{lead.persona}</td>
                     <td className="px-6 py-4">
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
-                        {lead.icpFit}
+                      <span
+                        className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(
+                          lead.icpMatchScore
+                        )}`}
+                      >
+                        {lead.icpMatchScore}
                       </span>
                     </td>
+                    <td className="px-6 py-4">{lead.persona}</td>
                     <td className="px-6 py-4">{lead.state}</td>
                     <td className="px-6 py-4">
                       <span
