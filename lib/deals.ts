@@ -14,21 +14,11 @@ export type Deal = {
 function mapBuyerTitleToPersona(title: string): Persona {
   const lower = title.toLowerCase();
 
-  if (lower.includes("revops") || lower.includes("revenue operations")) {
-    return "RevOps";
-  }
-
-  if (lower.includes("sales") || lower.includes("account executive")) {
-    return "Sales Leader";
-  }
-
-  if (lower.includes("founder") || lower.includes("ceo") || lower.includes("co-founder")) {
-    return "Founder";
-  }
-
-  if (lower.includes("marketing") || lower.includes("growth")) {
+  if (lower.includes("revops")) return "RevOps";
+  if (lower.includes("sales")) return "Sales Leader";
+  if (lower.includes("founder") || lower.includes("ceo")) return "Founder";
+  if (lower.includes("marketing") || lower.includes("growth"))
     return "Marketing Leader";
-  }
 
   return "Other";
 }
@@ -79,39 +69,53 @@ export function buildICPFromDeals(deals: Deal[]) {
     sizeMap[size] = (sizeMap[size] || 0) + 1;
 
     const persona = mapBuyerTitleToPersona(d.buyer_title);
-    personaMap[persona] = (personaMap[persona] || 0) + 1;
+    personaMap[persona]++;
 
     totalValue += d.amount_eur;
 
-    if (d.sales_cycle_days && d.sales_cycle_days > 0) {
+    if (d.sales_cycle_days > 0) {
       totalSalesCycleDays += d.sales_cycle_days;
-      salesCycleCount += 1;
+      salesCycleCount++;
     }
   });
 
-  const topString = (obj: Record<string, number>) =>
+  const top = (obj: Record<string, number>) =>
     Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0];
 
-  const topPersona = (obj: Record<Persona, number>): Persona => {
-    const entry = Object.entries(obj).sort((a, b) => b[1] - a[1])[0];
-    return (entry?.[0] as Persona) || "Sales Leader";
-  };
+  const topPersona = (): Persona =>
+    (Object.entries(personaMap).sort((a, b) => b[1] - a[1])[0]?.[0] as Persona) ||
+    "Sales Leader";
 
-  const industry = topString(industryMap) || "B2B SaaS";
-  const employeeBand = topString(sizeMap) || "50-200";
-  const persona = topPersona(personaMap);
+  const industry = top(industryMap) || "B2B SaaS";
+  const employeeBand = top(sizeMap) || "50-200";
+  const persona = topPersona();
+
+  const avgDealSize = Math.round(totalValue / wonDeals.length);
+  const winRate = Math.round((wonDeals.length / deals.length) * 100);
+  const salesCycleDays =
+    salesCycleCount > 0
+      ? Math.round(totalSalesCycleDays / salesCycleCount)
+      : 45;
 
   return {
     industry,
     employeeBand,
     persona,
-    avgDealSize: Math.round(totalValue / wonDeals.length),
-    winRate: Math.round((wonDeals.length / deals.length) * 100),
-    salesCycleDays:
-      salesCycleCount > 0
-        ? Math.round(totalSalesCycleDays / salesCycleCount)
-        : 45,
+    avgDealSize,
+    winRate,
+    salesCycleDays,
     label: `${industry} | ${employeeBand} | ${persona}`,
-    notes: ["Derived from won deals"],
+
+    notes: [
+      `${Math.round(
+        (industryMap[industry] / wonDeals.length) * 100
+      )}% of revenue comes from ${industry}`,
+
+      `${persona} personas dominate closed deals`,
+
+      `Companies ${employeeBand} convert best`,
+
+      `Avg deal €${avgDealSize.toLocaleString()} with ${salesCycleDays} day cycle`,
+    ],
   };
 }
