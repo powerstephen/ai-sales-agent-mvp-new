@@ -6,6 +6,7 @@ export type Deal = {
   employees: number;
   amount_eur: number;
   outcome: "won" | "lost";
+  sales_cycle_days?: number;
 };
 
 export function normalizeDeals(rows: any[]): Deal[] {
@@ -17,6 +18,7 @@ export function normalizeDeals(rows: any[]): Deal[] {
     employees: Number(row.employees || 0),
     amount_eur: Number(row.amount_eur || 0),
     outcome: row.outcome === "won" ? "won" : "lost",
+    sales_cycle_days: Number(row.sales_cycle_days || 0),
   }));
 }
 
@@ -36,6 +38,8 @@ export function buildICPFromDeals(deals: Deal[]) {
   const sizeMap: Record<string, number> = {};
   const personaMap: Record<string, number> = {};
   let totalValue = 0;
+  let totalSalesCycleDays = 0;
+  let salesCycleCount = 0;
 
   wonDeals.forEach((d) => {
     industryMap[d.industry] = (industryMap[d.industry] || 0) + 1;
@@ -46,18 +50,27 @@ export function buildICPFromDeals(deals: Deal[]) {
     personaMap[d.buyer_title] = (personaMap[d.buyer_title] || 0) + 1;
 
     totalValue += d.amount_eur;
+
+    if (d.sales_cycle_days && d.sales_cycle_days > 0) {
+      totalSalesCycleDays += d.sales_cycle_days;
+      salesCycleCount += 1;
+    }
   });
 
   const top = (obj: Record<string, number>) =>
     Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0];
 
   return {
-    industry: top(industryMap),
-    employeeBand: top(sizeMap),
-    persona: top(personaMap),
+    industry: top(industryMap) || "B2B SaaS",
+    employeeBand: top(sizeMap) || "50-200",
+    persona: top(personaMap) || "Sales Leader",
     avgDealSize: Math.round(totalValue / wonDeals.length),
     winRate: Math.round((wonDeals.length / deals.length) * 100),
-    label: `${top(industryMap)} | ${top(sizeMap)} | ${top(personaMap)}`,
+    salesCycleDays:
+      salesCycleCount > 0
+        ? Math.round(totalSalesCycleDays / salesCycleCount)
+        : 45,
+    label: `${top(industryMap) || "B2B SaaS"} | ${top(sizeMap) || "50-200"} | ${top(personaMap) || "Sales Leader"}`,
     notes: ["Derived from won deals"],
   };
 }
