@@ -1,3 +1,5 @@
+import { Persona } from "@/lib/types";
+
 export type Deal = {
   deal_id: string;
   company: string;
@@ -8,6 +10,28 @@ export type Deal = {
   outcome: "won" | "lost";
   sales_cycle_days?: number;
 };
+
+function mapBuyerTitleToPersona(title: string): Persona {
+  const lower = title.toLowerCase();
+
+  if (lower.includes("revops") || lower.includes("revenue operations")) {
+    return "RevOps";
+  }
+
+  if (lower.includes("sales") || lower.includes("account executive")) {
+    return "Sales Leader";
+  }
+
+  if (lower.includes("founder") || lower.includes("ceo") || lower.includes("co-founder")) {
+    return "Founder";
+  }
+
+  if (lower.includes("marketing") || lower.includes("growth")) {
+    return "Marketing Leader";
+  }
+
+  return "Other";
+}
 
 export function normalizeDeals(rows: any[]): Deal[] {
   return rows.map((row, i) => ({
@@ -36,7 +60,14 @@ export function buildICPFromDeals(deals: Deal[]) {
 
   const industryMap: Record<string, number> = {};
   const sizeMap: Record<string, number> = {};
-  const personaMap: Record<string, number> = {};
+  const personaMap: Record<Persona, number> = {
+    "Sales Leader": 0,
+    RevOps: 0,
+    Founder: 0,
+    "Marketing Leader": 0,
+    Other: 0,
+  };
+
   let totalValue = 0;
   let totalSalesCycleDays = 0;
   let salesCycleCount = 0;
@@ -47,7 +78,8 @@ export function buildICPFromDeals(deals: Deal[]) {
     const size = band(d.employees);
     sizeMap[size] = (sizeMap[size] || 0) + 1;
 
-    personaMap[d.buyer_title] = (personaMap[d.buyer_title] || 0) + 1;
+    const persona = mapBuyerTitleToPersona(d.buyer_title);
+    personaMap[persona] = (personaMap[persona] || 0) + 1;
 
     totalValue += d.amount_eur;
 
@@ -57,20 +89,29 @@ export function buildICPFromDeals(deals: Deal[]) {
     }
   });
 
-  const top = (obj: Record<string, number>) =>
+  const topString = (obj: Record<string, number>) =>
     Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0];
 
+  const topPersona = (obj: Record<Persona, number>): Persona => {
+    const entry = Object.entries(obj).sort((a, b) => b[1] - a[1])[0];
+    return (entry?.[0] as Persona) || "Sales Leader";
+  };
+
+  const industry = topString(industryMap) || "B2B SaaS";
+  const employeeBand = topString(sizeMap) || "50-200";
+  const persona = topPersona(personaMap);
+
   return {
-    industry: top(industryMap) || "B2B SaaS",
-    employeeBand: top(sizeMap) || "50-200",
-    persona: top(personaMap) || "Sales Leader",
+    industry,
+    employeeBand,
+    persona,
     avgDealSize: Math.round(totalValue / wonDeals.length),
     winRate: Math.round((wonDeals.length / deals.length) * 100),
     salesCycleDays:
       salesCycleCount > 0
         ? Math.round(totalSalesCycleDays / salesCycleCount)
         : 45,
-    label: `${top(industryMap) || "B2B SaaS"} | ${top(sizeMap) || "50-200"} | ${top(personaMap) || "Sales Leader"}`,
+    label: `${industry} | ${employeeBand} | ${persona}`,
     notes: ["Derived from won deals"],
   };
 }
