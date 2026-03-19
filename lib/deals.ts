@@ -14,11 +14,21 @@ export type Deal = {
 function mapBuyerTitleToPersona(title: string): Persona {
   const lower = title.toLowerCase();
 
-  if (lower.includes("revops")) return "RevOps";
-  if (lower.includes("sales")) return "Sales Leader";
-  if (lower.includes("founder") || lower.includes("ceo")) return "Founder";
-  if (lower.includes("marketing") || lower.includes("growth"))
+  if (lower.includes("revops") || lower.includes("revenue operations")) {
+    return "RevOps";
+  }
+
+  if (lower.includes("sales") || lower.includes("account executive")) {
+    return "Sales Leader";
+  }
+
+  if (lower.includes("founder") || lower.includes("ceo") || lower.includes("co-founder")) {
+    return "Founder";
+  }
+
+  if (lower.includes("marketing") || lower.includes("growth")) {
     return "Marketing Leader";
+  }
 
   return "Other";
 }
@@ -73,9 +83,10 @@ export function buildICPFromDeals(deals: Deal[]) {
 
     totalValue += d.amount_eur;
 
-    if (d.sales_cycle_days > 0) {
-      totalSalesCycleDays += d.sales_cycle_days;
-      salesCycleCount++;
+    const cycleDays = d.sales_cycle_days ?? 0;
+    if (cycleDays > 0) {
+      totalSalesCycleDays += cycleDays;
+      salesCycleCount += 1;
     }
   });
 
@@ -105,16 +116,10 @@ export function buildICPFromDeals(deals: Deal[]) {
     winRate,
     salesCycleDays,
     label: `${industry} | ${employeeBand} | ${persona}`,
-
     notes: [
-      `${Math.round(
-        (industryMap[industry] / wonDeals.length) * 100
-      )}% of revenue comes from ${industry}`,
-
+      `${Math.round((industryMap[industry] / wonDeals.length) * 100)}% of revenue comes from ${industry}`,
       `${persona} personas dominate closed deals`,
-
       `Companies ${employeeBand} convert best`,
-
       `Avg deal €${avgDealSize.toLocaleString()} with ${salesCycleDays} day cycle`,
     ],
   };
