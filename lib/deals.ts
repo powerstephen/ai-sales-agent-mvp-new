@@ -30,9 +30,7 @@ function band(size: number) {
 export function buildICPFromDeals(deals: Deal[]) {
   const wonDeals = deals.filter((d) => d.outcome === "won");
 
-  if (wonDeals.length === 0) {
-    return null;
-  }
+  if (wonDeals.length === 0) return null;
 
   const industryMap: Record<string, number> = {};
   const sizeMap: Record<string, number> = {};
@@ -59,5 +57,7 @@ export function buildICPFromDeals(deals: Deal[]) {
     persona: top(personaMap),
     avgDealSize: Math.round(totalValue / wonDeals.length),
     winRate: Math.round((wonDeals.length / deals.length) * 100),
+    label: `${top(industryMap)} | ${top(sizeMap)} | ${top(personaMap)}`,
+    notes: ["Derived from won deals"],
   };
 }
