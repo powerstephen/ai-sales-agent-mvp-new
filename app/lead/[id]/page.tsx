@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getLeadById, leads } from "@/lib/data";
+import { notFound, useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { leads as demoLeads } from "@/lib/data";
 import { analyzeLead } from "@/lib/openai";
 import { buildICP } from "@/lib/icp";
 import { getSignalCards } from "@/lib/scoring";
+import { Lead } from "@/lib/types";
 
 function getScoreColor(score: number) {
   if (score >= 80) return "text-green-600";
@@ -17,16 +21,66 @@ function getPriorityLabel(score: number) {
   return "Low Priority";
 }
 
-export default async function LeadPage({ params }: { params: { id: string } }) {
-  const lead = getLeadById(params.id);
+export default function LeadPage() {
+  const params = useParams<{ id: string }>();
+  const [activeLeads, setActiveLeads] = useState<Lead[]>(demoLeads);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const uploaded = localStorage.getItem("uploadedLeads");
+    if (uploaded) {
+      try {
+        const parsed = JSON.parse(uploaded) as Lead[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setActiveLeads(parsed);
+        }
+      } catch {
+        setActiveLeads(demoLeads);
+      }
+    }
+    setLoaded(true);
+  }, []);
+
+  const lead = useMemo(
+    () => activeLeads.find((item) => item.id === params.id),
+    [activeLeads, params.id]
+  );
+
+  const icp = useMemo(() => buildICP(activeLeads), [activeLeads]);
+
+  const [analysis, setAnalysis] = useState<Awaited<ReturnType<typeof analyzeLead>> | null>(null);
+
+  useEffect(() => {
+    if (lead) {
+      analyzeLead(lead).then(setAnalysis);
+    }
+  }, [lead]);
+
+  if (!loaded) {
+    return (
+      <main className="min-h-screen bg-gray-50 px-6 py-10">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-sm text-gray-500">Loading lead...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!lead) {
     notFound();
   }
 
-  const analysis = await analyzeLead(lead);
+  if (!analysis) {
+    return (
+      <main className="min-h-screen bg-gray-50 px-6 py-10">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-sm text-gray-500">Analyzing lead...</p>
+        </div>
+      </main>
+    );
+  }
+
   const signals = getSignalCards(lead);
-  const icp = buildICP(leads);
 
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
@@ -206,10 +260,6 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
               Edit emails
             </button>
           </div>
-
-          <p className="mt-3 text-xs text-gray-500">
-            Follow-up timing can later be made configurable by user or account.
-          </p>
         </section>
       </div>
     </main>
