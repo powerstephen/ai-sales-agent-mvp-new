@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLeadById } from "@/lib/data";
 import { analyzeLead } from "@/lib/openai";
+import { buildICP } from "@/lib/icp";
+import { leads } from "@/lib/data";
 import { getSignalCards } from "@/lib/scoring";
 
 function getScoreColor(score: number) {
@@ -25,6 +27,7 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
 
   const analysis = await analyzeLead(lead);
   const signals = getSignalCards(lead);
+  const icp = buildICP(leads);
 
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
@@ -42,7 +45,6 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </p>
         </div>
 
-        {/* HERO */}
         <div className="mb-8 rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm">
           <div className="grid gap-6 md:grid-cols-[320px_1fr] md:items-center">
             <div>
@@ -54,6 +56,14 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
                 <div className="pb-3 text-2xl font-medium text-gray-700">
                   {getPriorityLabel(analysis.score)}
                 </div>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">ICP Match Score</p>
+                <p className="mt-2 text-3xl font-semibold text-gray-900">{analysis.icpMatchScore}</p>
+                <p className="mt-2 text-sm text-gray-600">
+                  Compared against your best-performing segment: {icp.industry}, {icp.employeeBand} employees, {icp.persona}.
+                </p>
               </div>
             </div>
 
@@ -74,7 +84,6 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* TWO EQUAL BOXES */}
         <div className="mb-8 grid gap-6 lg:grid-cols-2">
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900">Why this lead now</h2>
@@ -82,16 +91,33 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
               {analysis.reasoning}
             </p>
 
-            <ul className="mt-5 space-y-3">
-              {analysis.whyNow.slice(0, 5).map((item, index) => (
-                <li
-                  key={index}
-                  className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Why this scored well</p>
+              <ul className="mt-3 space-y-3">
+                {analysis.whyNow.slice(0, 5).map((item, index) => (
+                  <li
+                    key={index}
+                    className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">ICP match reasons</p>
+              <ul className="mt-3 space-y-3">
+                {analysis.icpMatchReasons.map((item, index) => (
+                  <li
+                    key={index}
+                    className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
 
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -118,7 +144,6 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
           </section>
         </div>
 
-        {/* FULL WIDTH EMAILS */}
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Outreach sequence</h2>
