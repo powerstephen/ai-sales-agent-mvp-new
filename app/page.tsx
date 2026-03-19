@@ -1,7 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { leads } from "@/lib/data";
 import { buildICP, calculateICPMatchScore } from "@/lib/icp";
-import { getICPFit, getLeadScore, getLeadState, getPersona, getPriority } from "@/lib/scoring";
+import {
+  getICPFit,
+  getLeadScore,
+  getLeadState,
+  getPersona,
+  getPriority,
+} from "@/lib/scoring";
 import { signals, scoreSignal, getSignalReasons } from "@/lib/signals";
 
 function getScoreStyles(score: number) {
@@ -11,6 +20,8 @@ function getScoreStyles(score: number) {
 }
 
 export default function HomePage() {
+  const [mode, setMode] = useState<"recover" | "generate">("recover");
+
   const icp = buildICP(leads);
 
   const enrichedLeads = leads
@@ -33,230 +44,165 @@ export default function HomePage() {
     }))
     .sort((a, b) => b.score - a.score);
 
-  const pipelineMatches = enrichedLeads.filter((lead) => lead.icpMatchScore >= 70).length;
-  const pipelineQuality = Math.round((pipelineMatches / enrichedLeads.length) * 100);
-
   const highValueDormant = enrichedLeads.filter(
     (lead) => lead.score >= 80 && lead.lastContactedDays > 60
   );
+
   const estimatedPipeline = highValueDormant.length * 20000;
 
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
       <div className="mx-auto max-w-7xl">
+
+        {/* HEADER */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-gray-500">AI Sales Agent MVP</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+          <p className="text-sm text-gray-500">AI Sales Agent</p>
+          <h1 className="text-3xl font-semibold mt-2">
             Revenue Intelligence Dashboard
           </h1>
-          <p className="mt-3 max-w-3xl text-base text-gray-600">
-            Recover missed pipeline, learn from revenue patterns, and surface new high-fit opportunities based on external triggers.
-          </p>
         </div>
 
-        <div className="mb-6 rounded-2xl bg-black p-6 text-white">
-          <p className="text-sm text-gray-300">Missed opportunity</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {highValueDormant.length} high-value leads not contacted in 60+ days
-          </p>
-          <p className="mt-2 text-sm text-gray-300">
-            Estimated recoverable pipeline: €{estimatedPipeline.toLocaleString()}
-          </p>
+        {/* 🔥 MODE TOGGLE */}
+        <div className="mb-6 flex gap-3">
+          <button
+            onClick={() => setMode("recover")}
+            className={`px-4 py-2 rounded-lg text-sm ${
+              mode === "recover"
+                ? "bg-black text-white"
+                : "bg-white border"
+            }`}
+          >
+            Recover Pipeline
+          </button>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/calculator"
-              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
-            >
-              Estimate your missed pipeline
-            </Link>
-            <Link
-              href="/lead/lead_001"
-              className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-white"
-            >
-              View sample lead
-            </Link>
-          </div>
+          <button
+            onClick={() => setMode("generate")}
+            className={`px-4 py-2 rounded-lg text-sm ${
+              mode === "generate"
+                ? "bg-black text-white"
+                : "bg-white border"
+            }`}
+          >
+            Generate Pipeline
+          </button>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Your best customers</p>
-              <h2 className="mt-2 text-2xl font-semibold text-gray-900">{icp.label}</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
-                Based on revenue patterns, your strongest segment appears to be {icp.industry} companies with {icp.employeeBand} employees, typically buying through {icp.persona} stakeholders.
+        {/* ========================= */}
+        {/* RECOVER PIPELINE MODE */}
+        {/* ========================= */}
+        {mode === "recover" && (
+          <>
+            {/* VALUE BOX */}
+            <div className="mb-6 bg-black text-white p-6 rounded-2xl">
+              <p className="text-sm text-gray-300">Missed opportunity</p>
+              <p className="text-2xl font-semibold mt-2">
+                {highValueDormant.length} high-value leads not contacted in 60+ days
+              </p>
+              <p className="text-sm mt-2 text-gray-300">
+                Estimated recoverable pipeline: €{estimatedPipeline.toLocaleString()}
               </p>
             </div>
 
-            <div className="rounded-2xl bg-amber-50 px-5 py-4">
-              <p className="text-sm text-amber-800">
-                Only <span className="font-semibold">{pipelineQuality}%</span> of your current pipeline matches your best-performing ICP
-              </p>
-            </div>
-          </div>
+            {/* LEADS */}
+            <div className="bg-white p-6 rounded-2xl shadow">
+              <h2 className="text-lg font-semibold mb-4">
+                Existing pipeline
+              </h2>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Industry</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">{icp.industry}</p>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Company size</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">{icp.employeeBand}</p>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Primary persona</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">{icp.persona}</p>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Avg deal size</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">€{icp.avgDealSize.toLocaleString()}</p>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Win rate</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">{icp.winRate}%</p>
-            </div>
-          </div>
+              <table className="w-full text-sm">
+                <thead className="text-left text-gray-500">
+                  <tr>
+                    <th>Lead</th>
+                    <th>Company</th>
+                    <th>Score</th>
+                    <th>ICP</th>
+                  </tr>
+                </thead>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {icp.notes.map((note, index) => (
-              <div key={index} className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900">
-                {note}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">New opportunities detected</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                External signals that appear to match your ICP and may deserve outbound attention.
-              </p>
+                <tbody>
+                  {enrichedLeads.map((lead) => (
+                    <tr key={lead.id} className="border-t">
+                      <td className="py-3">
+                        <Link href={`/lead/${lead.id}`}>
+                          {lead.name}
+                        </Link>
+                      </td>
+                      <td>{lead.company}</td>
+                      <td>
+                        <span
+                          className={`px-2 py-1 rounded border ${getScoreStyles(
+                            lead.score
+                          )}`}
+                        >
+                          {lead.score}
+                        </span>
+                      </td>
+                      <td>{lead.icpMatchScore}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </>
+        )}
 
-          <div className="space-y-4">
-            {enrichedSignals.map((signal) => (
-              <div
-                key={signal.id}
-                className="flex flex-col gap-4 rounded-2xl border border-gray-200 p-5 lg:flex-row lg:items-center lg:justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-3">
-                    <p className="text-base font-semibold text-gray-900">{signal.company}</p>
+        {/* ========================= */}
+        {/* GENERATE PIPELINE MODE */}
+        {/* ========================= */}
+        {mode === "generate" && (
+          <div className="bg-white p-6 rounded-2xl shadow">
+            <h2 className="text-lg font-semibold mb-4">
+              New opportunities detected
+            </h2>
+
+            <div className="space-y-4">
+              {enrichedSignals.map((signal) => (
+                <div
+                  key={signal.id}
+                  className="flex justify-between items-center border p-4 rounded-xl"
+                >
+                  <div>
+                    <p className="font-medium">{signal.company}</p>
+                    <p className="text-sm text-gray-500">
+                      {signal.signal}
+                    </p>
+
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {signal.reasons.map((r, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded"
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
                     <span
-                      className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(
+                      className={`px-3 py-1 rounded-full text-xs border ${getScoreStyles(
                         signal.score
                       )}`}
                     >
                       {signal.score}
                     </span>
-                  </div>
 
-                  <p className="mt-2 text-sm text-gray-600">
-                    {signal.persona} · {signal.industry} · {signal.employees} employees · {signal.location}
-                  </p>
-
-                  <p className="mt-2 text-sm font-medium text-gray-900">{signal.signal}</p>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {signal.reasons.map((reason, index) => (
-                      <span
-                        key={index}
-                        className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-800"
+                    <div className="mt-2">
+                      <Link
+                        href={`/signals/${signal.id}`}
+                        className="text-sm underline"
                       >
-                        {reason}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/signals/${signal.id}`}
-                    className="rounded-lg bg-black px-4 py-2 text-sm text-white"
-                  >
-                    Generate outreach
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-semibold text-gray-900">Existing pipeline</h2>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr className="text-left text-sm text-gray-500">
-                  <th className="px-6 py-4 font-medium">Lead</th>
-                  <th className="px-6 py-4 font-medium">Company</th>
-                  <th className="px-6 py-4 font-medium">Score</th>
-                  <th className="px-6 py-4 font-medium">ICP Match</th>
-                  <th className="px-6 py-4 font-medium">Persona</th>
-                  <th className="px-6 py-4 font-medium">State</th>
-                  <th className="px-6 py-4 font-medium">Priority</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {enrichedLeads.map((lead) => (
-                  <tr key={lead.id} className="text-sm text-gray-700">
-                    <td className="px-6 py-4">
-                      <Link href={`/lead/${lead.id}`} className="font-medium text-gray-900 hover:text-gray-600">
-                        {lead.name}
+                        Generate outreach
                       </Link>
-                      <p className="mt-1 text-xs text-gray-500">{lead.title}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900">{lead.company}</p>
-                      <p className="mt-1 text-xs text-gray-500">{lead.companyData.signal}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(
-                          lead.score
-                        )}`}
-                      >
-                        {lead.score}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(
-                          lead.icpMatchScore
-                        )}`}
-                      >
-                        {lead.icpMatchScore}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{lead.persona}</td>
-                    <td className="px-6 py-4">{lead.state}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          lead.priority === "High"
-                            ? "bg-black text-white"
-                            : lead.priority === "Medium"
-                            ? "bg-gray-200 text-gray-900"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {lead.priority}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
       </div>
     </main>
   );
