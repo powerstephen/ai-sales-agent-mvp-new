@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getLeadById } from "@/lib/data";
+import { getLeadById, leads } from "@/lib/data";
 import { analyzeLead } from "@/lib/openai";
 import { buildICP } from "@/lib/icp";
-import { leads } from "@/lib/data";
 import { getSignalCards } from "@/lib/scoring";
 
 function getScoreColor(score: number) {
@@ -87,14 +86,15 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
         <div className="mb-8 grid gap-6 lg:grid-cols-2">
           <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900">Why this lead now</h2>
-            <p className="mt-4 text-sm leading-6 text-gray-700">
-              {analysis.reasoning}
-            </p>
+
+            <div className="mt-4 rounded-2xl bg-gray-50 p-4">
+              <p className="text-sm leading-6 text-gray-800">{analysis.reasoning}</p>
+            </div>
 
             <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Why this scored well</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Priority drivers</p>
               <ul className="mt-3 space-y-3">
-                {analysis.whyNow.slice(0, 5).map((item, index) => (
+                {analysis.whyNow.map((item, index) => (
                   <li
                     key={index}
                     className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
@@ -106,7 +106,7 @@ export default async function LeadPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">ICP match reasons</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">ICP alignment</p>
               <ul className="mt-3 space-y-3">
                 {analysis.icpMatchReasons.map((item, index) => (
                   <li
