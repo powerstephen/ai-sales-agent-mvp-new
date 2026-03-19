@@ -25,6 +25,11 @@ export default function HomePage() {
   const warmNeglected = enrichedLeads.filter((lead) => lead.state === "Warm but Neglected").length;
   const highICP = enrichedLeads.filter((lead) => lead.icpFit === "High").length;
 
+  const highValueDormant = enrichedLeads.filter(
+    (lead) => lead.score >= 80 && lead.lastContactedDays > 60
+  );
+  const estimatedPipeline = highValueDormant.length * 20000;
+
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-10 md:px-10">
       <div className="mx-auto max-w-7xl">
@@ -36,6 +41,31 @@ export default function HomePage() {
           <p className="mt-3 max-w-3xl text-base text-gray-600">
             Rank neglected leads, understand why they matter now, and generate the next best action based on fit, timing, engagement and pain signals.
           </p>
+        </div>
+
+        <div className="mb-6 rounded-2xl bg-black p-6 text-white">
+          <p className="text-sm text-gray-300">Missed opportunity</p>
+          <p className="mt-2 text-2xl font-semibold">
+            {highValueDormant.length} high-value leads not contacted in 60+ days
+          </p>
+          <p className="mt-2 text-sm text-gray-300">
+            Estimated recoverable pipeline: €{estimatedPipeline.toLocaleString()}
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/calculator"
+              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
+            >
+              Estimate your missed pipeline
+            </Link>
+            <Link
+              href="/lead/lead_001"
+              className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-white"
+            >
+              View sample lead
+            </Link>
+          </div>
         </div>
 
         <div className="mb-8 grid gap-4 md:grid-cols-4">
@@ -89,7 +119,11 @@ export default function HomePage() {
                       <p className="mt-1 text-xs text-gray-500">{lead.companyData.signal}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(lead.score)}`}>
+                      <span
+                        className={`inline-flex min-w-[52px] justify-center rounded-full border px-3 py-1 text-xs font-semibold ${getScoreStyles(
+                          lead.score
+                        )}`}
+                      >
                         {lead.score}
                       </span>
                     </td>
